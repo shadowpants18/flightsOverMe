@@ -1,14 +1,18 @@
 const fetch = require('node-fetch');
 const config = require('./config.json')
 const Twitter = require('twitter')
+const fs = require('fs')
+const imgur = require('imgur')
+const captureWebsite = require('capture-website')
 
 const date = new Date()
-const twitClient = new Twitter({
+const client = new Twitter({
   consumer_key:config.twitterKeys.consumer_key,
   consumer_secret:config.twitterKeys.consumer_secret,
   access_token_key:config.twitterKeys.access_token_key,
   access_token_secret:config.twitterKeys.access_token_secret
 })
+
 
 let params
 const url = 'https://opensky-network.org/api/states/all?'
@@ -21,33 +25,63 @@ function calculateDistance(radius, lat, long){
   let long2 = long + longDif
   return [lat1, long1, lat2, long2]
 }
+async function captureSite(lat, long, path){
+	await captureWebsite.file(`https://www.flightradar24.com/${lat},${long}/12`, path, {
+    width:1080,
+    height:1080,
+    type: "jpeg",
+    hideElements:[
+      '.nav-container-bar',
+      '#mapView',
+      '#responsiveBottomPanel',
+      '.important-banner'
+    ],
+    delay:5,
+    overwrite:true,
+    scaleFactor:2,
+    element:"#map_canvas",
+
+  })
+}
+  
 
 function TweetTimed(number, time){
   let message = `${number} planes have flown over ${config.locationName} in the last ${time}.`
-  twitClient.post('statuses/update', {status: message}).then(tweet=>{
-    console.log(tweet)
+  client.post('statuses/update', {status: message}).then(tweet=>{
+    console.log("Tweeting!")
   })
   .catch(e=>{
     throw e
   })
 }
 
+
 function TweetFlight(plane){
   let message = `#${plane[1]} : A plane has just flown over ${config.locationName} and originated from ${plane[2]}.`
+  let path = `./images/screenshot${plane[0]}.jpg`
+
   if(plane[13] != null){
     message += `\nGeometric altitude: ${plane[13]} m/s`
   }
   if(plane[9] != null){
     message += `\nVelocity: ${plane[9]} m/s`
   }
-  if(plane[5] != null && plane[6] != null){
-    message += `\nLatitude and longitude: ${plane[6]}, ${plane[5]}`
-  }
-  twitClient.post('statuses/update', {status: message}).then(tweet=>{
-    console.log(tweet.text)
-  }).catch(e=>{
-    throw e
+  message += `\nLatitude and longitude: ${plane[6]}, ${plane[5]}`
+  
+  let roundedLat = Math.ceil(Number(plane[6]) * 100)/100
+  let roundedLong = Math.ceil(Number(plane[5]) * 100)/100
+  captureSite(roundedLat, roundedLong, path).then(()=>{
+    imgur.uploadFile(path).then((json)=>{
+      message += `\nScreenshot: ${json.data.link}`
+      client.post('statuses/update', {status: message}).then(tweet=>{
+        console.log("tweeting")
+        fs.unlinkSync(path)
+      }).catch(e=>{
+        throw e
+      })
+    })
   })
+  
 }
 
 if(config.setBoundaries == true){
@@ -77,7 +111,8 @@ async function main(run){
   let hour = date.getHours()
   let dateOfMonth = date.getDate()
   while(true){
-    await new Promise(resolve => setTimeout(resolve, 60 * 1000));
+    await new Promise(resolve => setTimeout(resolve, 30 * 1000));
+    console.log("checking...")
     try{
       fetch(url + params).then(res=>{
         res.json().then(data=>{
@@ -103,14 +138,14 @@ async function main(run){
             if(!planesList.includes(plane[0]) && plane[8] == false){
               planesList.push(plane[0])
               hourCount ++
-              TweetFlight(plane)
+              dateCount ++ 
+              TweetFlight(plane);
             }
           }
         })
       })
     }catch(e){
       console.error(e)
-      break
     }
   }
 }
