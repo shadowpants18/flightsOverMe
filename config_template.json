@@ -1,0 +1,16 @@
+{ 
+  "setBoundaries":true,
+  "lamin": "0",
+  "lomin": "0",
+  "lamax": "0",
+  "lomax": "0",
+  "latlong":[12,12],
+  "radius": 150,
+  "twitterKeys":{
+    "consumer_key": "",
+    "consumer_secret": "",
+    "access_token_key": "",
+    "access_token_secret": ""
+  }
+
+}
