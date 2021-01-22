@@ -16,3 +16,9 @@ lomax: set to the maximum longitude to detect
 If setBoundaries is false:  
 latlong: list containing the latitude and longitude [lat, long]  
 radius: radius in kilometers(max of 1000)  
+
+Twitter keys:  
+access_token_key:  
+access_token_secret:  
+consumer_key:  
+consumer_secret:  
