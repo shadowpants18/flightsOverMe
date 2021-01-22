@@ -44,7 +44,7 @@ function TweetFlight(plane){
     message += `\nLatitude and longitude: ${plane[6]}, ${plane[5]}`
   }
   twitClient.post('statuses/update', {status: message}).then(tweet=>{
-    console.log(tweet)
+    console.log(tweet.text)
   }).catch(e=>{
     throw e
   })
@@ -82,7 +82,6 @@ async function main(run){
       fetch(url + params).then(res=>{
         res.json().then(data=>{
           let json = data['states']
-          console.log(data)
           if(data['states'] == null) {
             console.log('no planes')
             return
