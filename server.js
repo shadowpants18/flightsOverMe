@@ -77,7 +77,7 @@ async function main(run){
   let hour = date.getHours()
   let dateOfMonth = date.getDate()
   while(true){
-    await new Promise(resolve => setTimeout(resolve, 5 * 1000));
+    await new Promise(resolve => setTimeout(resolve, 60 * 1000));
     try{
       fetch(url + params).then(res=>{
         res.json().then(data=>{
