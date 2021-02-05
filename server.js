@@ -79,7 +79,7 @@ function TweetFlight(plane){
   let path = `./images/screenshot${plane[0]}.jpg`
 
   if(plane[13] != null){
-    message += `\nGeometric altitude: ${plane[13]} m/s`
+    message += `\nGeometric altitude: ${plane[13]} meters`
   }
   if(plane[9] != null){
     message += `\nVelocity: ${plane[9]} m/s`
