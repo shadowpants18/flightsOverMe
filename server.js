@@ -3,6 +3,7 @@ const config = require('./config.json')
 const Twitter = require('twitter')
 const fs = require('fs')
 const imgur = require('imgur')
+const util = require('util')
 const captureWebsite = require('capture-website')
 
 const date = new Date()
@@ -16,6 +17,23 @@ const client = new Twitter({
 
 let params
 const url = 'https://opensky-network.org/api/states/all?'
+
+const readFile = util.promisify(fs.readFile)
+
+function clearDirectory(){
+
+  const directory = 'images';
+
+  fs.readdir(directory, (err, files) => {
+    if (err) throw err;
+
+    for (const file of files) {
+      fs.unlink(path.join(directory, file), err => {
+        if (err) throw err;
+      });
+    }
+  });
+}
 function calculateDistance(radius, lat, long){
   let latDif = radius/110.574
   let lat1 = lat - latDif
@@ -71,13 +89,16 @@ function TweetFlight(plane){
   let roundedLat = Math.ceil(Number(plane[6]) * 100)/100
   let roundedLong = Math.ceil(Number(plane[5]) * 100)/100
   captureSite(roundedLat, roundedLong, path).then(()=>{
-    imgur.uploadFile(path).then((json)=>{
-      message += `\nScreenshot: ${json.data.link}`
-      client.post('statuses/update', {status: message}).then(tweet=>{
-        console.log("tweeting")
-        fs.unlinkSync(path)
-      }).catch(e=>{
-        throw e
+    readFile(path).then(data=>{
+      client.post('media/upload', {media:data}, (err, media, response)=>{
+        if(err) throw err
+        let status = {
+          status:message,
+          media_ids:media.media_id_string
+        }
+        client.post("statuses/update", status, (err, tweet, response)=>{
+          console.log('sending tweet')
+        })
       })
     })
   })
@@ -106,10 +127,11 @@ if(config.setBoundaries == true){
 let planesList = []
 let hourCount = 0
 let dateCount = 0
+let hour = date.getHours()
+let dateOfMonth = date.getDate()
 
 async function main(run){
-  let hour = date.getHours()
-  let dateOfMonth = date.getDate()
+
   while(true){
     await new Promise(resolve => setTimeout(resolve, 30 * 1000));
     console.log("checking...")
@@ -124,6 +146,7 @@ async function main(run){
           if(hour != date.getHours()){
             console.log("Hourly count " + hourCount)
             TweetTimed(hourCount, "hour")
+            clearDirectory()
             hour = date.getHours()
             hourCount = 0
 
