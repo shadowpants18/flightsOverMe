@@ -2,9 +2,12 @@ const fetch = require('node-fetch');
 const config = require('./config.json')
 const Twitter = require('twitter')
 const fs = require('fs')
-const imgur = require('imgur')
 const util = require('util')
-const captureWebsite = require('capture-website')
+let captureWebsite = null
+if(config.screenshot == true){
+  captureWebsite = require('capture-website')
+}
+
 const path = require('path')
 
 const date = new Date()
@@ -14,7 +17,6 @@ const client = new Twitter({
   access_token_key:config.twitterKeys.access_token_key,
   access_token_secret:config.twitterKeys.access_token_secret
 })
-
 
 let params
 const url = 'https://opensky-network.org/api/states/all?'
