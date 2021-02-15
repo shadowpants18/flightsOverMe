@@ -5,6 +5,7 @@ const fs = require('fs')
 const imgur = require('imgur')
 const util = require('util')
 const captureWebsite = require('capture-website')
+const path = require('path')
 
 const date = new Date()
 const client = new Twitter({
@@ -88,21 +89,27 @@ function TweetFlight(plane){
   
   let roundedLat = Math.ceil(Number(plane[6]) * 100)/100
   let roundedLong = Math.ceil(Number(plane[5]) * 100)/100
-  captureSite(roundedLat, roundedLong, path).then(()=>{
-    readFile(path).then(data=>{
-      client.post('media/upload', {media:data}, (err, media, response)=>{
-        if(err) throw err
-        let status = {
-          status:message,
-          media_ids:media.media_id_string
-        }
-        client.post("statuses/update", status, (err, tweet, response)=>{
-          console.log('sending tweet')
+  if(config.screenshot == true){
+    captureSite(roundedLat, roundedLong, path).then(()=>{
+      readFile(path).then(data=>{
+        client.post('media/upload', {media:data}, (err, media, response)=>{
+          if(err) throw err
+          let status = {
+            status:message,
+            media_ids:media.media_id_string
+          }
+          client.post("statuses/update", status, (err, tweet, response)=>{
+            console.log('sending tweet')
+          })
         })
       })
     })
-  })
-  
+  }else{
+    let status = message
+    client.post("statuses/update", status, (err, tweet, response)=>{
+      console.log('sending tweet')
+    })
+  }
 }
 
 if(config.setBoundaries == true){
