@@ -136,6 +136,7 @@ async function main(run){
     await new Promise(resolve => setTimeout(resolve, 30 * 1000));
     console.log("checking...")
     try{
+      clearDirectory()
       fetch(url + params).then(res=>{
         res.json().then(data=>{
           let json = data['states']
@@ -146,10 +147,8 @@ async function main(run){
           if(hour != date.getHours()){
             console.log("Hourly count " + hourCount)
             TweetTimed(hourCount, "hour")
-            clearDirectory()
             hour = date.getHours()
             hourCount = 0
-
           }
           if(dateOfMonth != date.getDate()){
             dateOfMonth = date.getDate()
