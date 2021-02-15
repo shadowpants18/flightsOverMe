@@ -107,7 +107,7 @@ function TweetFlight(plane){
       })
     })
   }else{
-    let status = message
+    let status = {status: message}
     client.post("statuses/update", status, (err, tweet, response)=>{
       console.log('sending tweet')
     })
@@ -138,13 +138,14 @@ let hourCount = 0
 let dateCount = 0
 let hour = date.getHours()
 let dateOfMonth = date.getDate()
-
+let second = date.getSeconds()
 async function main(run){
 
   while(true){
-    await new Promise(resolve => setTimeout(resolve, 30 * 1000));
+    await new Promise(resolve => setTimeout(resolve, 5 * 1000));
     console.log("checking...")
     try{
+      const newDate = new Date()
       clearDirectory()
       fetch(url + params).then(res=>{
         res.json().then(data=>{
@@ -153,14 +154,14 @@ async function main(run){
             console.log('no planes')
             return
           }
-          if(hour != date.getHours()){
+          if(hour != newDate.getHours()){
             console.log("Hourly count " + hourCount)
             TweetTimed(hourCount, "hour")
-            hour = date.getHours()
+            hour = newDate.getHours()
             hourCount = 0
           }
-          if(dateOfMonth != date.getDate()){
-            dateOfMonth = date.getDate()
+          if(dateOfMonth != newDate.getDate()){
+            dateOfMonth = newDate.getDate()
             console.log("Daily count " + dateCount)
             TweetTimed(dateCount, "day")
             dateCount = 0
